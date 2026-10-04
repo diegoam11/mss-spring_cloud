@@ -1,4 +1,4 @@
-package com.msteam.employee_service;
+package msteam.department_service;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Employee {
+public class EmployeeDto {
 
 	private Long id;
 	private String name;

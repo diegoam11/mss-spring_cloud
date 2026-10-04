@@ -1,6 +1,7 @@
 package com.msteam.employee_service;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,6 +34,13 @@ public class EmployeeController {
 			return ResponseEntity.notFound().build();
 		}
 		return ResponseEntity.ok(employee);
+	}
+
+	@GetMapping("/department/{departmentId}")
+	public List<Employee> getEmployeesByDepartmentId(@PathVariable Long departmentId) {
+		return employees.values().stream()
+				.filter(employee -> departmentId.equals(employee.getDepartmentId()))
+				.toList();
 	}
 
 	@PostMapping
