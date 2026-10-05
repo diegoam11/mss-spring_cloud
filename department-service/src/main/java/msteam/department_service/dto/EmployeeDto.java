@@ -1,4 +1,4 @@
-package msteam.department_service;
+package msteam.department_service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

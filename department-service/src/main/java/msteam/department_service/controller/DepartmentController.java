@@ -1,12 +1,8 @@
-package msteam.department_service;
+package msteam.department_service.controller;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,68 +14,66 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import msteam.department_service.dto.EmployeeDto;
+import msteam.department_service.exception.EmployeeServiceUnavailableException;
+import msteam.department_service.model.Department;
+import msteam.department_service.service.DepartmentService;
+import msteam.department_service.service.EmployeeIntegrationService;
+
 @RestController
 @RequestMapping("/api/v1/departments")
 public class DepartmentController {
 
-	private final Map<Long, Department> departments = new ConcurrentHashMap<>();
-	private final AtomicLong nextId = new AtomicLong(1);
-	private final EmployeeClient employeeClient;
+	private final DepartmentService departmentService;
+	private final EmployeeIntegrationService employeeIntegrationService;
 
-	public DepartmentController(EmployeeClient employeeClient) {
-		this.employeeClient = employeeClient;
+	public DepartmentController(DepartmentService departmentService, EmployeeIntegrationService employeeIntegrationService) {
+		this.departmentService = departmentService;
+		this.employeeIntegrationService = employeeIntegrationService;
 	}
 
 	@GetMapping
 	public Collection<Department> getAllDepartments() {
-		return departments.values();
+		return departmentService.getAllDepartments();
 	}
 
 	@GetMapping("/{id}")
 	public ResponseEntity<Department> getDepartmentById(@PathVariable Long id) {
-		Department department = departments.get(id);
-		if (department == null) {
-			return ResponseEntity.notFound().build();
-		}
-		return ResponseEntity.ok(department);
+		return departmentService.getDepartmentById(id)
+				.map(ResponseEntity::ok)
+				.orElseGet(() -> ResponseEntity.notFound().build());
 	}
 
 	@PostMapping
 	public ResponseEntity<Department> createDepartment(@RequestBody Department department) {
-		department.setId(nextId.getAndIncrement());
-		departments.put(department.getId(), department);
-		return ResponseEntity.status(HttpStatus.CREATED).body(department);
+		return ResponseEntity.status(HttpStatus.CREATED).body(departmentService.createDepartment(department));
 	}
 
 	@PutMapping("/{id}")
 	public ResponseEntity<Department> updateDepartment(@PathVariable Long id, @RequestBody Department department) {
-		if (!departments.containsKey(id)) {
-			return ResponseEntity.notFound().build();
-		}
-		department.setId(id);
-		departments.put(id, department);
-		return ResponseEntity.ok(department);
+		return departmentService.updateDepartment(id, department)
+				.map(ResponseEntity::ok)
+				.orElseGet(() -> ResponseEntity.notFound().build());
 	}
 
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
-		if (departments.remove(id) == null) {
+		if (!departmentService.deleteDepartment(id)) {
 			return ResponseEntity.notFound().build();
 		}
 		return ResponseEntity.noContent().build();
 	}
 
 	@GetMapping("/{id}/employees")
-	@CircuitBreaker(name = "employeeService", fallbackMethod = "getEmployeesByDepartmentFallback")
 	public ResponseEntity<List<EmployeeDto>> getEmployeesByDepartment(@PathVariable Long id) {
-		if (!departments.containsKey(id)) {
+		if (!departmentService.existsById(id)) {
 			return ResponseEntity.notFound().build();
 		}
-		return ResponseEntity.ok(employeeClient.getEmployeesByDepartmentId(id));
-	}
-
-	private ResponseEntity<List<EmployeeDto>> getEmployeesByDepartmentFallback(Long id, Throwable throwable) {
-		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(List.of());
+		try {
+			return ResponseEntity.ok(employeeIntegrationService.getEmployeesByDepartmentId(id));
+		} catch (EmployeeServiceUnavailableException exception) {
+			return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(List.of());
+		}
 	}
 
 }
