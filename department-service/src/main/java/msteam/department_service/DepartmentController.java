@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -69,11 +70,16 @@ public class DepartmentController {
 	}
 
 	@GetMapping("/{id}/employees")
+	@CircuitBreaker(name = "employeeService", fallbackMethod = "getEmployeesByDepartmentFallback")
 	public ResponseEntity<List<EmployeeDto>> getEmployeesByDepartment(@PathVariable Long id) {
 		if (!departments.containsKey(id)) {
 			return ResponseEntity.notFound().build();
 		}
 		return ResponseEntity.ok(employeeClient.getEmployeesByDepartmentId(id));
+	}
+
+	private ResponseEntity<List<EmployeeDto>> getEmployeesByDepartmentFallback(Long id, Throwable throwable) {
+		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(List.of());
 	}
 
 }

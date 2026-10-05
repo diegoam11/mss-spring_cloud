@@ -10,3 +10,22 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,circuitbreakers # expone /actuator/health y /actuator/circuitbreakers por HTTP
+  health:
+    circuitbreakers:
+      enabled: true # agrega el estado del circuit breaker al /actuator/health
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      employeeService: # nombre usado en @CircuitBreaker(name = "employeeService") del DepartmentController
+        sliding-window-size: 10 # evalúa la tasa de fallos sobre las últimas 10 llamadas
+        failure-rate-threshold: 50 # si el 50% o más de esas llamadas falla, abre el circuito
+        wait-duration-in-open-state: 10s # tiempo que el circuito permanece abierto (corta directo al fallback) antes de reintentar
+        permitted-number-of-calls-in-half-open-state: 3 # llamadas de prueba permitidas al salir del estado abierto
+        automatic-transition-from-open-to-half-open-enabled: true # pasa solo de abierto a half-open sin esperar una llamada manual
