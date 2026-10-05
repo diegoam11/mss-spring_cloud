@@ -10,12 +10,17 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+    refresh:
+      enable: false # evita que /actuator/refresh recree el cliente de Eureka (NPE conocido en eureka-client al re-fetchear el registro)
+
+app:
+  message: "HI desde la configuracion de department-service" # usado por MessageController, para probar refresh en caliente
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,circuitbreakers # expone /actuator/health y /actuator/circuitbreakers por HTTP
+        include: health,circuitbreakers,refresh # expone /actuator/health, /actuator/circuitbreakers y /actuator/refresh por HTTP
   health:
     circuitbreakers:
       enabled: true # agrega el estado del circuit breaker al /actuator/health
