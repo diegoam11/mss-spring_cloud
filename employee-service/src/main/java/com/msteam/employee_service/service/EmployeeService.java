@@ -26,6 +26,13 @@ public class EmployeeService {
 	}
 
 	public List<Employee> getEmployeesByDepartmentId(Long departmentId) {
+		/*
+		try {
+			Thread.sleep(2000); // simula latencia para probar el @Bulkhead de department-service
+		} catch (InterruptedException exception) {
+			Thread.currentThread().interrupt();
+		}
+		*/
 		return employees.values().stream()
 				.filter(employee -> departmentId.equals(employee.getDepartmentId()))
 				.toList();

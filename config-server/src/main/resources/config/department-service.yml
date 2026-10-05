@@ -52,3 +52,9 @@ resilience4j:
       getAllDepartments: # mismo nombre usado en @TimeLimiter(name = "getAllDepartments") del DepartmentController
         timeout-duration: 2s # tiempo máximo que se espera la respuesta antes de cortar y usar el fallback (504)
         cancel-running-future: true # cancela la tarea asíncrona en curso si se cumple el timeout
+
+  bulkhead:
+    instances:
+      employeeService: # mismo nombre que circuit breaker/retry, usado en @Bulkhead(name = "employeeService")
+        max-concurrent-calls: 2 # máximo 2 llamadas simultáneas a employee-service
+        max-wait-duration: 0 # no espera a que se libere un hueco, rechaza al instante con 429 si ya hay 2 en curso

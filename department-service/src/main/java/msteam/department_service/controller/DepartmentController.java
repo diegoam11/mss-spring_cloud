@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import msteam.department_service.dto.EmployeeDto;
 import msteam.department_service.exception.EmployeeServiceUnavailableException;
+import msteam.department_service.exception.TooManyConcurrentRequestsException;
 import msteam.department_service.model.Department;
 import msteam.department_service.service.DepartmentService;
 import msteam.department_service.service.EmployeeIntegrationService;
@@ -93,6 +94,8 @@ public class DepartmentController {
 			return ResponseEntity.ok(employeeIntegrationService.getEmployeesByDepartmentId(id));
 		} catch (EmployeeServiceUnavailableException exception) {
 			return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(List.of());
+		} catch (TooManyConcurrentRequestsException exception) {
+			return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(List.of());
 		}
 	}
 
