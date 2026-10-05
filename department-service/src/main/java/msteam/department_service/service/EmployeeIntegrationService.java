@@ -3,6 +3,7 @@ package msteam.department_service.service;
 import java.util.List;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.springframework.stereotype.Service;
 
 import msteam.department_service.client.EmployeeClient;
@@ -19,6 +20,7 @@ public class EmployeeIntegrationService {
 	}
 
 	@CircuitBreaker(name = "employeeService", fallbackMethod = "getEmployeesByDepartmentIdFallback")
+	@Retry(name = "employeeService")
 	public List<EmployeeDto> getEmployeesByDepartmentId(Long departmentId) {
 		return employeeClient.getEmployeesByDepartmentId(departmentId);
 	}

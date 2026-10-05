@@ -22,6 +22,7 @@ management:
 
 resilience4j:
   circuitbreaker:
+    circuit-breaker-aspect-order: 1 # menor que retry-aspect-order: el circuit breaker envuelve al retry (toda la secuencia de reintentos cuenta como UNA sola llamada)
     instances:
       employeeService: # nombre usado en @CircuitBreaker(name = "employeeService") del DepartmentController
         sliding-window-size: 10 # evalúa la tasa de fallos sobre las últimas 10 llamadas
@@ -29,3 +30,12 @@ resilience4j:
         wait-duration-in-open-state: 10s # tiempo que el circuito permanece abierto (corta directo al fallback) antes de reintentar
         permitted-number-of-calls-in-half-open-state: 3 # llamadas de prueba permitidas al salir del estado abierto
         automatic-transition-from-open-to-half-open-enabled: true # pasa solo de abierto a half-open sin esperar una llamada manual
+
+  retry:
+    retry-aspect-order: 2 # mayor que circuit-breaker-aspect-order: el retry queda dentro del circuit breaker
+    instances:
+      employeeService: # mismo nombre que el circuit breaker, usado en @Retry(name = "employeeService")
+        max-attempts: 3 # intenta la llamada hasta 3 veces en total antes de darse por vencido
+        wait-duration: 500ms # espera base entre el intento 1 y 2
+        enable-exponential-backoff: true # cada espera siguiente se multiplica, en vez de ser siempre igual
+        exponential-backoff-multiplier: 2 # 500ms -> 1000ms entre intentos
