@@ -39,3 +39,10 @@ resilience4j:
         wait-duration: 500ms # espera base entre el intento 1 y 2
         enable-exponential-backoff: true # cada espera siguiente se multiplica, en vez de ser siempre igual
         exponential-backoff-multiplier: 2 # 500ms -> 1000ms entre intentos
+
+  ratelimiter:
+    instances:
+      getAllDepartments: # nombre usado en @RateLimiter(name = "getAllDepartments") del DepartmentController
+        limit-for-period: 5 # máximo 5 llamadas permitidas por período
+        limit-refresh-period: 10s # cada 10s se resetea el contador de llamadas disponibles
+        timeout-duration: 0 # no espera a que se libere un permiso, rechaza al instante con 429 si no hay disponibles

@@ -3,9 +3,12 @@ package msteam.department_service.controller;
 import java.util.Collection;
 import java.util.List;
 
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,8 +36,14 @@ public class DepartmentController {
 	}
 
 	@GetMapping
+	@RateLimiter(name = "getAllDepartments")
 	public Collection<Department> getAllDepartments() {
 		return departmentService.getAllDepartments();
+	}
+
+	@ExceptionHandler(RequestNotPermitted.class)
+	public ResponseEntity<Void> handleRateLimitExceeded() {
+		return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
 	}
 
 	@GetMapping("/{id}")
