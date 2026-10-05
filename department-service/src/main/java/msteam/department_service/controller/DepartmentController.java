@@ -2,13 +2,15 @@ package msteam.department_service.controller;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 
 import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,14 +38,23 @@ public class DepartmentController {
 	}
 
 	@GetMapping
-	@RateLimiter(name = "getAllDepartments")
-	public Collection<Department> getAllDepartments() {
-		return departmentService.getAllDepartments();
+	@RateLimiter(name = "getAllDepartments", fallbackMethod = "getAllDepartmentsRateLimitFallback")
+	public ResponseEntity<Collection<Department>> getAllDepartments() {
+		return ResponseEntity.ok(departmentService.getAllDepartments());
 	}
 
-	@ExceptionHandler(RequestNotPermitted.class)
-	public ResponseEntity<Void> handleRateLimitExceeded() {
+	private ResponseEntity<Collection<Department>> getAllDepartmentsRateLimitFallback(RequestNotPermitted exception) {
 		return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+	}
+
+	@GetMapping("/async")
+	@TimeLimiter(name = "getAllDepartments", fallbackMethod = "getAllDepartmentsAsyncTimeoutFallback")
+	public CompletableFuture<ResponseEntity<Collection<Department>>> getAllDepartmentsAsync() {
+		return departmentService.getAllDepartmentsAsync().thenApply(ResponseEntity::ok);
+	}
+
+	private CompletableFuture<ResponseEntity<Collection<Department>>> getAllDepartmentsAsyncTimeoutFallback(TimeoutException exception) {
+		return CompletableFuture.completedFuture(ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).build());
 	}
 
 	@GetMapping("/{id}")

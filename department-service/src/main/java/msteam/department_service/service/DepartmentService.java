@@ -3,9 +3,11 @@ package msteam.department_service.service;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import msteam.department_service.model.Department;
@@ -18,6 +20,18 @@ public class DepartmentService {
 
 	public Collection<Department> getAllDepartments() {
 		return departments.values();
+	}
+
+	@Async
+	public CompletableFuture<Collection<Department>> getAllDepartmentsAsync() {
+		/*
+		try {
+			Thread.sleep(3000); // simula latencia para probar el @TimeLimiter (timeout-duration: 2s)
+		} catch (InterruptedException exception) {
+			Thread.currentThread().interrupt();
+		}
+		*/
+		return CompletableFuture.completedFuture(getAllDepartments());
 	}
 
 	public Optional<Department> getDepartmentById(Long id) {

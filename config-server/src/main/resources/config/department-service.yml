@@ -46,3 +46,9 @@ resilience4j:
         limit-for-period: 5 # máximo 5 llamadas permitidas por período
         limit-refresh-period: 10s # cada 10s se resetea el contador de llamadas disponibles
         timeout-duration: 0 # no espera a que se libere un permiso, rechaza al instante con 429 si no hay disponibles
+
+  timelimiter:
+    instances:
+      getAllDepartments: # mismo nombre usado en @TimeLimiter(name = "getAllDepartments") del DepartmentController
+        timeout-duration: 2s # tiempo máximo que se espera la respuesta antes de cortar y usar el fallback (504)
+        cancel-running-future: true # cancela la tarea asíncrona en curso si se cumple el timeout
